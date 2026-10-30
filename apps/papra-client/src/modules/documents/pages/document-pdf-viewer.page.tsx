@@ -1,8 +1,9 @@
 import type { Component } from 'solid-js';
 import { A, useParams } from '@solidjs/router';
 import { useQuery } from '@tanstack/solid-query';
-import { createMemo, lazy, onCleanup, Show, Suspense } from 'solid-js';
+import { lazy, Show, Suspense } from 'solid-js';
 import { useI18n } from '@/modules/i18n/i18n.provider';
+import { createObjectUrl } from '@/modules/shared/signals/create-object-url';
 import { Button } from '@/modules/ui/components/button';
 import { fetchDocument, fetchDocumentFile } from '../documents.services';
 
@@ -28,6 +29,8 @@ export const DocumentPdfViewerPage: Component = () => {
     queryKey: ['organizations', params.organizationId, 'documents', params.documentId, 'file'],
     queryFn: async () =>
       fetchDocumentFile({ documentId: params.documentId, organizationId: params.organizationId }),
+    // A document file is immutable once uploaded, no need to refetch it
+    staleTime: Infinity,
   }));
 
   const getIsPdf = () => {
@@ -35,19 +38,7 @@ export const DocumentPdfViewerPage: Component = () => {
     return document ? pdfMimeTypes.includes(document.mimeType) : false;
   };
 
-  const getDataUrl = createMemo<string | undefined>((prev) => {
-    if (prev) {
-      URL.revokeObjectURL(prev);
-    }
-    return documentFileQuery.data ? URL.createObjectURL(documentFileQuery.data) : undefined;
-  });
-
-  onCleanup(() => {
-    const dataUrl = getDataUrl();
-    if (dataUrl) {
-      URL.revokeObjectURL(dataUrl);
-    }
-  });
+  const getDataUrl = createObjectUrl(() => documentFileQuery.data);
 
   return (
     <div class="flex flex-col h-screen overflow-hidden">
@@ -87,7 +78,9 @@ export const DocumentPdfViewerPage: Component = () => {
           </div>
 
           <div class="flex-1 min-h-0">
-            <Show when={getDataUrl()}>{(url) => <PdfViewer url={url()} />}</Show>
+            <Show when={getDataUrl()} keyed>
+              {(url) => <PdfViewer url={url} />}
+            </Show>
           </div>
         </Show>
       </Suspense>

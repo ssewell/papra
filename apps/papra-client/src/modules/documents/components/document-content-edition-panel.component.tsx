@@ -34,6 +34,8 @@ export const DocumentContentEditionPanel: Component<{ document: Document }> = (p
       setIsEditing(false);
       void queryClient.invalidateQueries({
         queryKey: ['organizations', props.document.organizationId, 'documents', props.document.id],
+        // Only the document metadata/content changed, the binary file is immutable
+        exact: true,
       });
     },
     onError: () => {
