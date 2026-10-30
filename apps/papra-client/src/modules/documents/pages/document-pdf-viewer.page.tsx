@@ -38,8 +38,6 @@ export const DocumentPdfViewerPage: Component = () => {
     return document ? pdfMimeTypes.includes(document.mimeType) : false;
   };
 
-  const getDataUrl = createObjectUrl(() => documentFileQuery.data);
-
   return (
     <div class="flex flex-col h-screen overflow-hidden">
       <Suspense
@@ -78,8 +76,8 @@ export const DocumentPdfViewerPage: Component = () => {
           </div>
 
           <div class="flex-1 min-h-0">
-            <Show when={getDataUrl()} keyed>
-              {(url) => <PdfViewer url={url} />}
+            <Show when={documentFileQuery.data} keyed>
+              {(blob) => <PdfViewer url={createObjectUrl(blob)} />}
             </Show>
           </div>
         </Show>

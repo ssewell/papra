@@ -122,8 +122,6 @@ export const DocumentBlobPreview: Component<{ blob: Blob; mimeType: string }> = 
     txtLikeMimeType.includes(props.mimeType) || props.mimeType.startsWith('text/');
   const { t } = useI18n();
 
-  const getObjectUrl = createObjectUrl(() => (getIsImage() || getIsPdf() ? props.blob : undefined));
-
   // Create a resource to check if octet-stream blob is text-safe
   const [isOctetStreamTextSafe] = createResource(
     () => (props.blob && props.mimeType === 'application/octet-stream' ? props.blob : null),
@@ -139,13 +137,15 @@ export const DocumentBlobPreview: Component<{ blob: Blob; mimeType: string }> = 
     <Switch>
       <Match when={getIsImage()}>
         <div>
-          <img src={getObjectUrl()} class="w-full h-full object-contain" />
+          <Show when={props.blob} keyed>
+            {(blob) => <img src={createObjectUrl(blob)} class="w-full h-full object-contain" />}
+          </Show>
         </div>
       </Match>
 
       <Match when={getIsPdf()}>
-        <Show when={getObjectUrl()} keyed>
-          {(url) => <PdfViewer url={url} />}
+        <Show when={props.blob} keyed>
+          {(blob) => <PdfViewer url={createObjectUrl(blob)} />}
         </Show>
       </Match>
 
